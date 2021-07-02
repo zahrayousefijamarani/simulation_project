@@ -3,11 +3,11 @@ from queue import PriorityQueue
 
 
 def get_arrival():
-    return -np.log(1 - np.random.uniform(low=0.0, high=1.0)) / landa
+    return round(-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / landa, 3)
 
 
 def get_service_time():
-    return -np.log(1 - np.random.uniform(low=0.0, high=1.0)) / m
+    return round(-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / m, 3)
 
 
 def get_part():
@@ -19,7 +19,7 @@ def get_part():
 
 def get_leave_time():
     l = -np.log(1 - np.random.uniform(low=0.0, high=1.0)) / a
-    return l
+    return round(l, 3)
 
 
 def get_level():
@@ -61,10 +61,12 @@ class Queue:
         self.waited_number += 1
 
     def get_queue(self):
-        return self.q.get()
+        b = self.q.get()
+        return (b[0], b[1][0], b[1][1])
 
     def delete(self, a):
-        self.q.get(a)  # todo
+        pass
+        # self.q.get(a)  # todo
 
 
 inputs = input().split(',')
@@ -74,7 +76,7 @@ m = float(inputs[2])
 a = float(inputs[3])
 m_staffs = []
 for i in range(0, n):
-    inputs = inputs().split(',')
+    inputs = input().split(',')
     number_of_staff = len(inputs)
     staffs = []
     for j in range(0, number_of_staff):
@@ -107,23 +109,34 @@ while True:
             p = get_part()
             do_part(p, 0)
             reception_state = True
+            print("serviced")
+            print(next_reception_arrival)
             next_reception_arrival = (get_level(), current_time + get_arrival(), get_leave_time())
         else:  # reception is busy
             if next_reception_arrival[2] + next_reception_arrival[1] <= current_time:
                 reception_q.left_person += 1
                 reception_q.delete(next_reception_arrival)
+                print("left1")
+                print(next_reception_arrival)
             else:
+                print("queued")
+                print(next_reception_arrival)
                 reception_q.add_queue(next_reception_arrival)
                 next_reception_arrival = (get_level(), current_time + get_arrival(), get_leave_time())
     else:
         if reception_q.number_in_queue > 0:
             w = reception_q.get_queue()
             if current_time < w[2] + w[1]:
+                print("serviced")
+                print(w)
                 reception_service_time = get_service_time()
                 reception_q.service_time += reception_service_time
                 reception_departure = current_time + reception_service_time
+                reception_q.serviced_person_number += 1
                 reception_q.number_in_queue -= 1
             else:
+                print("left2")
+                print(w)
                 reception_q.left_person += 1
         else:
             reception_departure = float('inf')
