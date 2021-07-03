@@ -9,7 +9,7 @@ def get_arrival():
 
 def get_service_time(miu):
     k = round(-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / miu, 3)
-    print("line12-service time" + str(k))
+  #  print("line12-service time" + str(k))
     return k
 
 
@@ -86,7 +86,7 @@ class Queue:
 
 
 total_number = 0
-max_number = 10  ##10^7 bayad beshe
+max_number = 20  ##10^7 bayad beshe
 current_time = 0
 inputs = input().split(',')
 n = int(inputs[0])
@@ -196,33 +196,16 @@ for i in range(0, n):
     for j in range(0, len(miu_staffs[i])):
         staff_state[i][j] = False
         staff_departure[i][j] = float('inf')
-print("number in parts: ", num_parts)
 
 while True:
-    print("~~~~~~~~~~~~~~~ count:", count)
-    print("num parts:", num_parts)
     for i in range(0, n):
         if num_parts[i] != 0:
             for j in range(0, len(miu_staffs[i])):  # update states
                 if abs(staff_departure[i][j] - parts_current_time) < 0.00000000001:
                     staff_state[i][j] = False
-            """
-            all_is_busy = True
-            for j in range(0, len(miu_staffs[i])):
-                if not staff_state[i][j]:
-                    all_is_busy = False
-                    break
 
-            if all_is_busy:          #increase waited time
-                temp = []
-                while not pq_parts[i].empty():
-                    c = pq_parts[i].get()
-                    temp.append((c[0], (c[1][0], c[1][1], c[1][2] + 1)))
-                for k in range(0, len(temp)):
-                    pq_parts[i].put(temp[k])
-           """
             for j in range(0, len(miu_staffs[i])):
-                if not staff_state[i][j]:  # staff is idle
+                if num_parts[i] > 0 and not staff_state[i][j]:  # staff is idle
                     customer = pq_parts[i].get()
                     num_parts[i] -= 1
                     count -= 1
@@ -234,15 +217,13 @@ while True:
                         i_list.append(str(i))
                         j_list.append(str(j))
                         departure_times.append(staff_departure[i][j])
-                        print("line 237 - serviced in part ", i)
-                        print("linr238- ", customer)
+                    #    print("line 220 - serviced in part ", i)
+                    #    print("linr221- ", customer)
                     else:
                         parts_left_person += 1
-                        print("line 241 - left3 in part", i)
-                        print("linr242- ", customer)
+                      #  print("line 224 - left3 in part", i)
+                   #     print("line225- ", customer)
 
-    print(parts_current_time)
-    print("departure times:\t\t", departure_times)
     if len(departure_times) != 0:
         parts_current_time = min(departure_times)
         departure_times.remove(parts_current_time)
