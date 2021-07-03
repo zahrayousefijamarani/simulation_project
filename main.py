@@ -1,5 +1,6 @@
 import numpy as np
 from queue import PriorityQueue
+import math
 
 
 def get_arrival():
@@ -203,7 +204,7 @@ while True:
     for i in range(0, n):
         if num_parts[i] != 0:
             for j in range(0, len(miu_staffs[i])):  # update states
-                if staff_departure[i][j] == current_time:
+                if abs(staff_departure[i][j] - parts_current_time) < 0.00000000001:
                     staff_state[i][j] = False
             """
             all_is_busy = True
@@ -211,7 +212,6 @@ while True:
                 if not staff_state[i][j]:
                     all_is_busy = False
                     break
-
 
             if all_is_busy:          #increase waited time
                 temp = []
@@ -241,6 +241,8 @@ while True:
                         print("line 241 - left3 in part", i)
                         print("linr242- ", customer)
 
+    print(parts_current_time)
+    print("departure times:\t\t", departure_times)
     if len(departure_times) != 0:
         parts_current_time = min(departure_times)
         departure_times.remove(parts_current_time)
