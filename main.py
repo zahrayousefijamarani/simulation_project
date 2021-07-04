@@ -88,7 +88,7 @@ class Queue:
 
 
 total_number = 0
-max_number = 5  ##10^7 bayad beshe
+max_number = 20  ##10^7 bayad beshe
 current_time = 0
 inputs = input().split(',')
 n = int(inputs[0])
@@ -112,6 +112,7 @@ reception_departure = float('inf')
 next_reception_arrival = get_next()
 total_number += 1
 reception_q = Queue([miu], "poisson")
+reception_q.number_in_system += 1
 
 while reception_q.serviced_person_number < max_number:
     reception_q.print_q()
@@ -140,14 +141,6 @@ while reception_q.serviced_person_number < max_number:
                 reception_q.left_person += 1
 
         else:  # reception is busy
-            # if next_reception_arrival[2] + next_reception_arrival[1] <= current_time:
-            #     reception_q.left_person += 1
-            #     reception_q.delete(next_reception_arrival)
-            #     print("left1")
-            #     print(next_reception_arrival)
-            # else:
-            # print("queued")
-            # print(next_reception_arrival)
             reception_q.add_queue(next_reception_arrival)
             reception_q.number_in_queue += 1
             reception_q.waited_number += 1
@@ -171,13 +164,10 @@ while reception_q.serviced_person_number < max_number:
         else:
             reception_departure = float('inf')
             reception_state = False
-print(reception_q.serviced_person_number)
-print(reception_q.left_person)
-print(reception_q.number_in_system)
-print(total_number)
-what is the staff distribution
-how people choose parts
-termination condition
+
+# what is the staff distribution
+# how people choose parts
+# termination condition
 print("total number = ", max_number)
 print("Number of leavers = ", reception_q.left_person)
 print("\n\n~~start parts~~")
