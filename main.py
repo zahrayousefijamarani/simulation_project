@@ -9,11 +9,13 @@ def get_arrival():
 
 def get_service_time(miu):
     k = round(-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / miu, 3)
-  #  print("line12-service time" + str(k))
+    #  print("line12-service time" + str(k))
     return k
 
 
 def get_next():
+    if total_number == max_number:
+        return (0, float('inf'), float('inf'))
     n = (get_level(), current_time + get_arrival(), get_leave_time())
     print("line17-get next func= ", n)
     return n
@@ -86,7 +88,7 @@ class Queue:
 
 
 total_number = 0
-max_number = 20  ##10^7 bayad beshe
+max_number = 5  ##10^7 bayad beshe
 current_time = 0
 inputs = input().split(',')
 n = int(inputs[0])
@@ -111,7 +113,7 @@ next_reception_arrival = get_next()
 total_number += 1
 reception_q = Queue([miu], "poisson")
 
-while total_number < max_number:
+while reception_q.serviced_person_number < max_number:
     reception_q.print_q()
     t = min(next_reception_arrival[1], reception_departure)
     print("line116\nline118 t = ", t)
@@ -121,6 +123,7 @@ while total_number < max_number:
     if next_reception_arrival[1] < reception_departure:
         reception_q.arrivals += 1
         reception_q.number_in_system += 1
+        total_number += 1
 
         if reception_q.number_in_queue == 0 and not reception_state:  # reception is idle
             reception_service_time = get_service_time(miu)
@@ -130,9 +133,9 @@ while total_number < max_number:
                 part_number = get_part()
                 do_part(part_number, 0, next_reception_arrival)
                 reception_state = True
-                print("line 134 - serviced", next_reception_arrival)
+                print("line 134 service time - serviced", reception_service_time, next_reception_arrival)
                 next_reception_arrival = get_next()
-                total_number += 1
+
             else:
                 reception_q.left_person += 1
 
@@ -149,7 +152,6 @@ while total_number < max_number:
             reception_q.number_in_queue += 1
             reception_q.waited_number += 1
             next_reception_arrival = get_next()
-            total_number += 1
     else:
         reception_q.serviced_person_number += 1
         if reception_q.number_in_queue > 0:
@@ -169,9 +171,13 @@ while total_number < max_number:
         else:
             reception_departure = float('inf')
             reception_state = False
-# what is the staff distribution
-# how people choose parts
-# termination condition
+print(reception_q.serviced_person_number)
+print(reception_q.left_person)
+print(reception_q.number_in_system)
+print(total_number)
+what is the staff distribution
+how people choose parts
+termination condition
 print("total number = ", max_number)
 print("Number of leavers = ", reception_q.left_person)
 print("\n\n~~start parts~~")
@@ -221,8 +227,8 @@ while True:
                     #    print("linr221- ", customer)
                     else:
                         parts_left_person += 1
-                      #  print("line 224 - left3 in part", i)
-                   #     print("line225- ", customer)
+                    #  print("line 224 - left3 in part", i)
+                #     print("line225- ", customer)
 
     if len(departure_times) != 0:
         parts_current_time = min(departure_times)
