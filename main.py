@@ -5,11 +5,11 @@ import timeit
 
 
 def get_arrival():
-    return round(-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / landa, 3)
+    return round((-np.log(1 - np.random.uniform(low=0.0, high=1.0))) * landa, 3)
 
 
 def get_service_time(miu):
-    return math.floor(-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / miu)
+    return math.floor((-np.log(1 - np.random.uniform(low=0.0, high=1.0))) * miu)
 
 
 def get_next(number_in_system):
