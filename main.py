@@ -1,5 +1,6 @@
 from queue import PriorityQueue
 import numpy as np
+from numpy import random
 import math
 import timeit
 
@@ -26,7 +27,8 @@ def get_part():
 
 
 def get_leave_time():
-    return round((-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / alpha), 3)
+    return round(random.exponential(scale=1 / alpha), 3)
+    # return round((-np.log(1 - np.random.uniform(low=0.0, high=1.0)) / alpha), 3)
 
 
 def get_level():
@@ -44,8 +46,8 @@ def get_level():
 
 
 def add_to_parts(num, element):
-    new_element = (element[0], (element[1], element[2]))  # priority, arrival_time, leave_time
-    pq_parts[num].put(new_element)
+    # priority, arrival_time, leave_time
+    pq_parts[num][element[0]].append((element[1], element[2]))
 
 
 class Queue:
@@ -89,17 +91,21 @@ n, landa, reception_miu, alpha = map(float, input().split())
 n = int(n)
 pq_parts = []
 for i in range(0, n):
-    pq_parts.append(PriorityQueue())
+    pq_parts.append([])
+    for j in range(5):
+        pq_parts[i].append([])
 miu_staffs = []
 for i in range(0, n):
     inputs = [*map(float, input().split())]
     miu_staffs.append(inputs)
-customer_response_time = [0, 0, 0, 0, 0]  # reception_service_time + parts_sevice_time
+customer_response_time = [0, 0, 0, 0, 0]  # reception_service_time + parts_service_time
 customer_waiting_time_in_queue = [0, 0, 0, 0, 0]
 customer_num_level = [0, 0, 0, 0, 0]
 reception_state = False
+all_arrival_times = []
 reception_departure = float('inf')
 next_reception_arrival = get_next(0)
+all_arrival_times.append(next_reception_arrival[1])
 reception_q = Queue([reception_miu], "poisson")
 reception_q.number_in_system += 1
 customer_num_level[4 - next_reception_arrival[0]] += 1
@@ -121,6 +127,7 @@ while reception_q.serviced_person_number < max_number:
                 add_to_parts(part_number, next_reception_arrival)
                 reception_state = True
                 next_reception_arrival = get_next(reception_q.number_in_system)
+                all_arrival_times.append(next_reception_arrival[1])
                 customer_num_level[4 - next_reception_arrival[0]] += 1
             else:
                 reception_q.left_person += 1
@@ -130,6 +137,7 @@ while reception_q.serviced_person_number < max_number:
             reception_q.number_in_queue += 1
             reception_q.waited_number += 1
             next_reception_arrival = get_next(reception_q.number_in_system)
+            all_arrival_times.append(next_reception_arrival[1])
             customer_num_level[4 - next_reception_arrival[0]] += 1
     else:
         reception_q.serviced_person_number += 1
@@ -160,12 +168,16 @@ staff_state = []
 staff_departure = []
 departure_times = []
 total_num_in_parts = 0
-parts_current_time = 0
+parts_current_time = min(all_arrival_times)
 parts_total_service_time = 0
 parts_left_person = 0
 for i in range(0, n):
-    num_parts.append(pq_parts[i].qsize())
-    total_num_in_parts += pq_parts[i].qsize()
+    counter = 0
+    for j in range(5):
+        counter += len(pq_parts[i][j])
+        pq_parts[i][j].sort(key=lambda a: a[0])
+    num_parts.append(counter)
+    total_num_in_parts += counter
     staff_state.append([])
     staff_departure.append([])
     for j in range(0, len(miu_staffs[i])):
@@ -174,41 +186,53 @@ for i in range(0, n):
     for j in range(0, len(miu_staffs[i])):
         staff_state[i][j] = False
         staff_departure[i][j] = float('inf')
+
 while True:
-    # print("\n",parts_current_time)
-    # for i in range(0, n):
-    # print("---->", pq_parts[i].queue)
+    """
+    print("\n", parts_current_time)
+    for i in range(0, n):
+        print("---->", pq_parts[i])
+    """
     for i in range(0, n):
         if num_parts[i] != 0:
             for j in range(0, len(miu_staffs[i])):  # update states
-                if staff_departure[i][j] == parts_current_time:
+                if staff_departure[i][j] <= parts_current_time:
                     staff_state[i][j] = False
-                    staff_departure[i][j] = float('inf')
+                # staff_departure[i][j] = float('inf')
             for j in range(0, len(miu_staffs[i])):
-                if num_parts[i] > 0 and pq_parts[i].queue[0][1][0] <= parts_current_time \
-                        and not staff_state[i][j]:  # staff is idle
-                    customer = pq_parts[i].get()
-                    num_parts[i] -= 1
-                    total_num_in_parts -= 1
-                    staff_service_time = get_service_time(miu_staffs[i][j])
-                    if customer[1][1] >= parts_current_time + staff_service_time - customer[1][0]:
-                        parts_total_service_time += staff_service_time
-                        staff_state[i][j] = True
-                        staff_departure[i][j] = parts_current_time + staff_service_time
-                        departure_times.append(customer[1][0])
-                        departure_times.append(staff_departure[i][j])
-                        customer_waiting_time_in_queue[4 - customer[0]] += parts_current_time - customer[1][0]
-                        customer_response_time[4 - customer[0]] += staff_service_time
-                        # print("line 199 - serviced in part ", i, "\t", customer)
-                    else:
-                        parts_left_person += 1
-                        customer_waiting_time_in_queue[4 - customer[0]] += customer[1][1]
-                        # print("line 204 - left3 in part", i, "\t", customer)
-    if len(departure_times) != 0:
-        parts_current_time = min(departure_times)
-        departure_times.remove(parts_current_time)
+                for k in range(5):
+                    if len(pq_parts[i][k]) > 0 and pq_parts[i][k][0][0] <= parts_current_time \
+                            and not staff_state[i][j]:  # staff is idle
+                        customer = pq_parts[i][k][0]
+                        pq_parts[i][k].remove(customer)
+                        num_parts[i] -= 1
+                        total_num_in_parts -= 1
+                        staff_service_time = get_service_time(miu_staffs[i][j])
+                        if customer[1] >= parts_current_time + staff_service_time - customer[0]:
+                            parts_total_service_time += staff_service_time
+                            staff_state[i][j] = True
+                            staff_departure[i][j] = parts_current_time + staff_service_time
+                            # departure_times.append(customer[0])
+                            departure_times.append(staff_departure[i][j])
+                            customer_waiting_time_in_queue[4 - k] += parts_current_time - customer[0]
+                            customer_response_time[4 - k] += staff_service_time
+                        else:
+                            parts_left_person += 1
+                            customer_waiting_time_in_queue[4 - k] += customer[1]
+    if len(departure_times) != 0 or len(all_arrival_times) != 0:
+        x = y = float('inf')
+        if len(all_arrival_times) > 0:
+            x = min(all_arrival_times)
+        if len(departure_times) > 0:
+            y = min(departure_times)
+        parts_current_time = min(x, y)
+        if parts_current_time in departure_times:
+            departure_times.remove(parts_current_time)
+        if parts_current_time in all_arrival_times:
+            all_arrival_times.remove(parts_current_time)
     if total_num_in_parts == 0:
         break
+
 print("parts_left_person:", parts_left_person)
 print("total number of leavers:", parts_left_person + reception_q.left_person)
 print("average time in system ",
@@ -231,7 +255,7 @@ print("response time", customer_response_time)
 stop = timeit.default_timer()
 print('Execution Time: ', stop - start)
 """
-2 1000 20 21
+2 1000 20 0.05
 1 2
 3
 """
