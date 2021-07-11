@@ -19,7 +19,7 @@ def get_next(number_in_system):
     return (4 - get_level(), math.floor(reception_current_time + get_arrival()), get_leave_time())
 
 
-def get_part():
+def get_part_number():
     num_list = []
     for i in range(0, n):
         num_list.append(i)
@@ -109,7 +109,7 @@ all_arrival_times.append(next_reception_arrival[1])
 reception_q = Queue([reception_miu], "poisson")
 reception_q.number_in_system += 1
 customer_num_level[4 - next_reception_arrival[0]] += 1
-while reception_q.serviced_person_number < max_number:
+while reception_q.number_in_system < max_number:
     #  reception_q.print_q()
     t = min(next_reception_arrival[1], reception_departure)
     reception_q.wait_time_in_queue += (reception_q.number_in_queue * (t - reception_current_time))
@@ -123,7 +123,7 @@ while reception_q.serviced_person_number < max_number:
                 reception_q.service_time += reception_service_time
                 reception_departure = reception_current_time + reception_service_time
                 customer_response_time[4 - next_reception_arrival[0]] += reception_service_time
-                part_number = get_part()
+                part_number = get_part_number()
                 add_to_parts(part_number, next_reception_arrival)
                 reception_state = True
                 next_reception_arrival = get_next(reception_q.number_in_system)
@@ -145,7 +145,7 @@ while reception_q.serviced_person_number < max_number:
             w = reception_q.get_queue()
             reception_service_time = get_service_time(reception_miu)
             if reception_current_time + reception_service_time <= w[2] + w[1]:
-                part_number = get_part()
+                part_number = get_part_number()
                 add_to_parts(part_number, w)
                 reception_q.service_time += reception_service_time
                 reception_departure = reception_current_time + reception_service_time
@@ -234,28 +234,31 @@ while True:
         break
 
 print("parts_left_person:", parts_left_person)
-print("total number of leavers:", parts_left_person + reception_q.left_person)
-print("average time in system ",
-      (sum(customer_waiting_time_in_queue) + sum(customer_response_time)) / sum(customer_num_level))
+if sum(customer_num_level) > 0:
+    print("average time in system ",
+          (sum(customer_waiting_time_in_queue) + sum(customer_response_time)) / sum(customer_num_level))
+else:
+    print("average time in system: 0 ")
 average_time_in_sys = [0, 0, 0, 0, 0]
 for i in range(0, 5):
     if customer_num_level[i] != 0:
         average_time_in_sys[i] = (customer_waiting_time_in_queue[i] + customer_response_time[i]) / customer_num_level[i]
-print("average time in system:", average_time_in_sys)
+print("average time in system in each level:", average_time_in_sys)
 print("total_waiting_time_in_queues ", sum(customer_waiting_time_in_queue))
 print("total_waiting_time_in_queues", customer_waiting_time_in_queue)
+print("total number of leavers:", parts_left_person + reception_q.left_person)
 print("average waiting time ", sum(customer_waiting_time_in_queue) / sum(customer_num_level))
 average_waiting_time_in_queues = [0, 0, 0, 0, 0]
 for i in range(0, 5):
     if customer_num_level[i] != 0:
         average_waiting_time_in_queues[i] = customer_waiting_time_in_queue[i] / customer_num_level[i]
-print("average waiting time in queues", average_waiting_time_in_queues)
+print("average waiting time in queues in each level:", average_waiting_time_in_queues)
 print("total response time ", sum(customer_response_time))
-print("response time", customer_response_time)
+print("response time in each level:", customer_response_time)
 stop = timeit.default_timer()
 print('Execution Time: ', stop - start)
 """
-2 1000 20 0.05
+2 100 15 0.05
 1 2
 3
 """
