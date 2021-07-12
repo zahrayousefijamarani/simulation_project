@@ -15,12 +15,9 @@ def get_service_time(miu):
 
 
 def get_next(number_in_system):
-    global customer_arrivals_x, customer_arrivals_t
     if number_in_system == max_number:
         return (0, float('inf'), float('inf'))
     out = (4 - get_level(), math.floor(reception_current_time + get_arrival()), get_leave_time())
-    customer_arrivals_x.append(out[1])
-    customer_arrivals_t.append(reception_current_time)
     return out
 
 
@@ -120,6 +117,7 @@ next_reception_arrival = get_next(0)
 all_arrival_times.append(next_reception_arrival[1])
 reception_q = Queue([reception_miu], "poisson")
 reception_q.number_in_system += 1
+in_system = 0
 customer_num_level[4 - next_reception_arrival[0]] += 1
 while reception_q.number_in_system < max_number:
     #  reception_q.print_q()
@@ -129,6 +127,12 @@ while reception_q.number_in_system < max_number:
     if next_reception_arrival[1] < reception_departure:
         reception_q.arrivals += 1
         reception_q.number_in_system += 1
+        in_system += 1
+        if len(customer_arrivals_t) > 0 and customer_arrivals_t[len(customer_arrivals_t) - 1] == reception_current_time:
+            customer_arrivals_x[len(customer_arrivals_x) - 1] = in_system
+        else:
+            customer_arrivals_x.append(in_system)
+            customer_arrivals_t.append(reception_current_time)
         if reception_q.number_in_queue == 0 and not reception_state:  # reception is idle
             reception_service_time = get_service_time(reception_miu)
             if next_reception_arrival[2] + next_reception_arrival[1] >= reception_current_time + reception_service_time:
@@ -142,6 +146,13 @@ while reception_q.number_in_system < max_number:
                 all_arrival_times.append(next_reception_arrival[1])
                 customer_num_level[4 - next_reception_arrival[0]] += 1
             else:
+                in_system -= 1
+                if len(customer_arrivals_t) > 0 and customer_arrivals_t[
+                    len(customer_arrivals_t) - 1] == reception_current_time:
+                    customer_arrivals_x[len(customer_arrivals_x) - 1] = in_system
+                else:
+                    customer_arrivals_x.append(in_system)
+                    customer_arrivals_t.append(reception_current_time)
                 reception_q.left_person += 1
                 customer_waiting_time_in_queue[4 - next_reception_arrival[0]] += next_reception_arrival[2]
         else:  # reception is busy
@@ -153,6 +164,12 @@ while reception_q.number_in_system < max_number:
             customer_num_level[4 - next_reception_arrival[0]] += 1
     else:
         reception_q.serviced_person_number += 1
+        in_system -= 1
+        if len(customer_arrivals_t) > 0 and customer_arrivals_t[len(customer_arrivals_t) - 1] == reception_current_time:
+            customer_arrivals_x[len(customer_arrivals_x) - 1] = in_system
+        else:
+            customer_arrivals_x.append(in_system)
+            customer_arrivals_t.append(reception_current_time)
         if reception_q.number_in_queue > 0:
             w = reception_q.get_queue()
             reception_service_time = get_service_time(reception_miu)
@@ -164,6 +181,9 @@ while reception_q.number_in_system < max_number:
                 customer_response_time[4 - w[0]] += reception_service_time
                 reception_q.number_in_queue -= 1
             else:
+                # in_system -= 1
+                # customer_arrivals_x.append(in_system)
+                # customer_arrivals_t.append(reception_current_time)
                 reception_q.number_in_queue -= 1
                 reception_q.left_person += 1
                 customer_waiting_time_in_queue[4 - w[0]] += w[2]
@@ -297,4 +317,9 @@ plt.show()
 2 100 15 0.05
 1 2
 3
+
+3 1 3 1
+3 2
+3
+4 1
 """
