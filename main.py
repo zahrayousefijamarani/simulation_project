@@ -3,6 +3,9 @@ import numpy as np
 from numpy import random
 import math
 import timeit
+import matplotlib.pyplot as plt
+
+
 
 
 def get_arrival():
@@ -14,9 +17,13 @@ def get_service_time(miu):
 
 
 def get_next(number_in_system):
+    global customer_arrivals_x, customer_arrivals_t
     if number_in_system == max_number:
         return (0, float('inf'), float('inf'))
-    return (4 - get_level(), math.floor(reception_current_time + get_arrival()), get_leave_time())
+    out = (4 - get_level(), math.floor(reception_current_time + get_arrival()), get_leave_time())
+    customer_arrivals_x.append(out[1])
+    customer_arrivals_t.append(reception_current_time)
+    return out
 
 
 def get_part_number():
@@ -83,9 +90,11 @@ class Queue:
         for i in self.print_queue:
             print(i)
 
+customer_arrivals_x = []
+customer_arrivals_t = []
 
 start = timeit.default_timer()
-max_number = 10 + 1  ##10^7 + 1 bayad beshe fk knm
+max_number = 100 + 1  ##10^7 + 1 bayad beshe fk knm
 reception_current_time = 0
 n, landa, reception_miu, alpha = map(float, input().split())
 n = int(n)
@@ -233,7 +242,9 @@ while True:
     if total_num_in_parts == 0:
         break
 
+print("length of reception queue: ", reception_q.waited_number)
 print("parts_left_person:", parts_left_person)
+print("total left person: ", reception_q.left_person + parts_left_person)
 if sum(customer_num_level) > 0:
     print("average time in system ",
           (sum(customer_waiting_time_in_queue) + sum(customer_response_time)) / sum(customer_num_level))
@@ -245,8 +256,7 @@ for i in range(0, 5):
         average_time_in_sys[i] = (customer_waiting_time_in_queue[i] + customer_response_time[i]) / customer_num_level[i]
 print("average time in system in each level:", average_time_in_sys)
 print("total_waiting_time_in_queues ", sum(customer_waiting_time_in_queue))
-print("total_waiting_time_in_queues", customer_waiting_time_in_queue)
-print("total number of leavers:", parts_left_person + reception_q.left_person)
+print("total_waiting_time_in_queues in each level: ", customer_waiting_time_in_queue)
 print("average waiting time ", sum(customer_waiting_time_in_queue) / sum(customer_num_level))
 average_waiting_time_in_queues = [0, 0, 0, 0, 0]
 for i in range(0, 5):
@@ -257,6 +267,13 @@ print("total response time ", sum(customer_response_time))
 print("response time in each level:", customer_response_time)
 stop = timeit.default_timer()
 print('Execution Time: ', stop - start)
+
+figure, axis = plt.subplots(1, 2)
+axis[0].plot(customer_arrivals_t, customer_arrivals_x)
+axis[0].set_title("Arrivals")
+
+plt.show()
+
 """
 2 100 15 0.05
 1 2
