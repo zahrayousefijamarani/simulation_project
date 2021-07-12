@@ -90,13 +90,15 @@ customer_arrivals_x = []
 customer_arrivals_t = []
 
 start = timeit.default_timer()
-max_number = 100 + 1  ##10^7 + 1 bayad beshe fk knm
+max_number = 10000 + 1  ##10^7 + 1 bayad beshe fk knm
 reception_current_time = 0
 n, landa, reception_miu, alpha = map(float, input().split())
 n = int(n)
 pq_parts = []
 parts_length_x = []
 parts_length_t = []
+x_a = [7.37,7.263, 7.36, 7.64,  7.91, 8.43,7.99,8.37,8.77,8.67]
+rate = [0.25, 0.5, 1, 2, 3, 4, 5, 6,7,8]
 for i in range(0, n):
     pq_parts.append([])
     for j in range(5):
@@ -303,13 +305,13 @@ print("response time in each level:", customer_response_time)
 stop = timeit.default_timer()
 print('Execution Time: ', stop - start)
 
-figure, axis = plt.subplots(1, 2)
+figure, axis = plt.subplots(1, 3)
 axis[0].plot(customer_arrivals_t, customer_arrivals_x)
 axis[0].set_title("Arrivals")
-
 for i in range(0, n):
     axis[1].plot(parts_length_t[i], parts_length_x[i])
 axis[1].set_title("Queue")
+axis[2].plot(rate, x_a)
 
 plt.show()
 
