@@ -47,10 +47,9 @@ def get_level():
         return 4
 
 
-def add_to_parts(num, element):
-    # priority, arrival_time, leave_time
-    pq_parts[num][element[0]].append((element[1], element[2]))
-
+def add_to_parts(num, element, reception_service_time):
+    # element: priority, arrival_time, leave_time
+    pq_parts[num][element[0]].append((element[1], element[2], reception_service_time))
 
 class Queue:
     def __init__(self, means, distribution):
@@ -108,6 +107,8 @@ for i in range(0, n):
     inputs = [*map(float, input().split())]
     miu_staffs.append(inputs)
 customer_response_time = [0, 0, 0, 0, 0]  # reception_service_time + parts_service_time
+all_response_times = [[], [], [], [], []]
+all_waiting_times = [[], [], [], [], []]
 customer_waiting_time_in_queue = [0, 0, 0, 0, 0]
 customer_num_level = [0, 0, 0, 0, 0]
 reception_state = False
@@ -140,7 +141,7 @@ while reception_q.number_in_system < max_number:
                 reception_departure = reception_current_time + reception_service_time
                 customer_response_time[4 - next_reception_arrival[0]] += reception_service_time
                 part_number = get_part_number()
-                add_to_parts(part_number, next_reception_arrival)
+                add_to_parts(part_number, next_reception_arrival,reception_service_time)
                 reception_state = True
                 next_reception_arrival = get_next(reception_q.number_in_system)
                 all_arrival_times.append(next_reception_arrival[1])
@@ -155,6 +156,7 @@ while reception_q.number_in_system < max_number:
                     customer_arrivals_t.append(reception_current_time)
                 reception_q.left_person += 1
                 customer_waiting_time_in_queue[4 - next_reception_arrival[0]] += next_reception_arrival[2]
+                all_waiting_times[4 - next_reception_arrival[0]].append(next_reception_arrival[2])
         else:  # reception is busy
             reception_q.add_queue(next_reception_arrival)
             reception_q.number_in_queue += 1
@@ -175,7 +177,7 @@ while reception_q.number_in_system < max_number:
             reception_service_time = get_service_time(reception_miu)
             if reception_current_time + reception_service_time <= w[2] + w[1]:
                 part_number = get_part_number()
-                add_to_parts(part_number, w)
+                add_to_parts(part_number, w,reception_service_time)
                 reception_q.service_time += reception_service_time
                 reception_departure = reception_current_time + reception_service_time
                 customer_response_time[4 - w[0]] += reception_service_time
@@ -187,6 +189,7 @@ while reception_q.number_in_system < max_number:
                 reception_q.number_in_queue -= 1
                 reception_q.left_person += 1
                 customer_waiting_time_in_queue[4 - w[0]] += w[2]
+                all_waiting_times[4 - w[0]].append(w[2])
         else:
             reception_departure = float('inf')
             reception_state = False
@@ -247,10 +250,13 @@ while True:
                             # departure_times.append(customer[0])
                             departure_times.append(staff_departure[i][j])
                             customer_waiting_time_in_queue[4 - k] += parts_current_time - customer[0]
+                            all_waiting_times[4 - k].append(parts_current_time - customer[0])
                             customer_response_time[4 - k] += staff_service_time
+                            all_response_times[4 - k].append(customer[2] + staff_service_time)
                         else:
                             parts_left_person += 1
                             customer_waiting_time_in_queue[4 - k] += customer[1]
+                            all_waiting_times[4 - k].append(customer[1])
         l_counter = 0
         for j in range(0, 5):
             for element in pq_parts[i][j]:
@@ -312,14 +318,25 @@ for i in range(0, n):
 axis[1].set_title("Queue")
 
 plt.show()
-
+for i in range(5):
+    plt.hist(all_response_times[i], bins=50)
+    plt.gca().set(title=('Frequency Histogram For Response Time, Level:', i), ylabel='Frequency')
+    plt.show()
+for i in range(5):
+    plt.hist(all_waiting_times[i], bins=50)
+    plt.gca().set(title=('Frequency Histogram For Waiting Time, Level:', i), ylabel='Frequency')
+    plt.show()
 """
 2 100 15 0.05
 1 2
 3
-
 3 1 3 1
 3 2
 3
 4 1
+
+
+2 10 5 0.05
+10 11
+10
 """
