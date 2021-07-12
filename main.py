@@ -6,8 +6,6 @@ import timeit
 import matplotlib.pyplot as plt
 
 
-
-
 def get_arrival():
     return round((-np.log(1 - np.random.uniform(low=0.0, high=1.0))) * landa, 3)
 
@@ -90,6 +88,7 @@ class Queue:
         for i in self.print_queue:
             print(i)
 
+
 customer_arrivals_x = []
 customer_arrivals_t = []
 
@@ -99,10 +98,14 @@ reception_current_time = 0
 n, landa, reception_miu, alpha = map(float, input().split())
 n = int(n)
 pq_parts = []
+parts_length_x = []
+parts_length_t = []
 for i in range(0, n):
     pq_parts.append([])
     for j in range(5):
         pq_parts[i].append([])
+    parts_length_t.append([])
+    parts_length_x.append([])
 miu_staffs = []
 for i in range(0, n):
     inputs = [*map(float, input().split())]
@@ -228,6 +231,13 @@ while True:
                         else:
                             parts_left_person += 1
                             customer_waiting_time_in_queue[4 - k] += customer[1]
+        l_counter = 0
+        for j in range(0, 5):
+            for element in pq_parts[i][j]:
+                if element[0] <= parts_current_time:
+                    l_counter += 1
+        parts_length_x[i].append(l_counter)
+        parts_length_t[i].append(parts_current_time)
     if len(departure_times) != 0 or len(all_arrival_times) != 0:
         x = y = float('inf')
         if len(all_arrival_times) > 0:
@@ -243,6 +253,11 @@ while True:
         break
 
 print("length of reception queue: ", reception_q.waited_number)
+print("average length of parts queue: [", end=' ')
+lengths = parts_length_x.copy()
+for i in range(0, n):
+    print(sum(lengths[i]) / len(lengths[i]), end=' ')
+print("]")
 print("parts_left_person:", parts_left_person)
 print("total left person: ", reception_q.left_person + parts_left_person)
 if sum(customer_num_level) > 0:
@@ -271,6 +286,10 @@ print('Execution Time: ', stop - start)
 figure, axis = plt.subplots(1, 2)
 axis[0].plot(customer_arrivals_t, customer_arrivals_x)
 axis[0].set_title("Arrivals")
+
+for i in range(0, n):
+    axis[1].plot(parts_length_t[i], parts_length_x[i])
+axis[1].set_title("Queue")
 
 plt.show()
 
